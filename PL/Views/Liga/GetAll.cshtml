@@ -1,0 +1,233 @@
+﻿
+@{
+    ViewData["Title"] = "GetAll";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2 class="text-center">Liga </h2>
+
+<div class="text-center">
+    <button class="btn btn-success m-3" onclick="showModal()">Agregar</button>
+</div>
+<div class="col-md-12">
+
+    <table id="tablaEmpleado" class="table table-hover" border="1">
+        <thead class="table-dark">
+            <tr>
+                <th class="text-center" scope="col"></th>
+                <th class="text-center" scope="col">Logo</th>
+                <th class="text-center" scope="col">Nombre</th>
+                <th class="text-center" scope="col">Pais</th>
+                <th class="text-center" scope="col"></th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</div>
+
+
+<div class="modal fade" id="modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" onclick="modalClose()">×</button>
+                <h4 class="modal-title">Formulario Liga</h4>
+            </div>
+
+            <div class="modal-body">
+                <form>
+                    <div class="form-group d-flex justify-content-center m-2">
+                        <input class="form-control" id="txtidLiga" placeholder="IdLiga" type="hidden" />
+                    </div>
+                    <div class="form-group d-flex justify-content-center m-2">
+                        <input type="text" class="form-control" id="txtnombre" placeholder="Nombre del la liga " />
+                    </div>
+                    <div class="form-group d-flex justify-content-center m-2">
+                        <input type="text" class="form-control" id="txtlogo" placeholder="Logo" />
+                    </div>
+                    <div class="form-group d-flex justify-content-center m-2">
+                        <select class="form-control" id="ddlpais">
+                            <option value="0">Selecciona un pais</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-success m-1" id="btnUpdate" onclick="guardar()">Guardar</button>
+                <button type="button" class="btn btn-danger m-1" data-dismiss="modal" onclick="modalClose()">Cancelar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="~/lib/jquery/dist/jquery.min.js"></script>
+<script type="text/javascript">
+    $(document).ready(function () { //click
+        GetAll();
+        GetAllPais();
+
+    });
+    function showModal() {
+        $('#modal').modal("show");
+    }
+
+    function modalClose() {
+        $('#modal').modal("hide");
+    }
+
+    function guardar() {
+        var idJugador = $('#txtidLiga').val()
+        if (idJugador == 0) {
+            Add();
+        } else {
+            Update();
+        }
+    }
+
+    function limpiarModal() {
+        $('#txtidLiga').val('');
+        $('#txtnombre').val('');
+        $('#txtlogo').val('');
+        $('#ddlpais option[value="0"]').attr("selected", true);
+    }
+
+
+    function GetAll() {
+        $.ajax({
+
+            url: 'http://192.168.0.123/api/Liga',
+            type: 'GET',
+            success: function (result) {
+                console.log(result)
+                $('#tablaEmpleado tbody').empty();
+                $.each(result, function (i, liga) {
+
+                    var filas =
+                        '<tr>'
+                        + '<td class="text-center"> '
+                        + '<button class="btn btn-outline-warning" onclick="GetById(' + liga.idLiga + ')">'
+                        + '<i class="fa-solid fa-pen-to-square fa-xl"></i>'
+                        + '</button> '
+                        + '</td>'
+                        + "<td class='text-center'><img src='" + liga.logo + "' alt='' width='50' height='50'> </td>"
+                        + "<td class='text-center'>" + liga.nombre + "</td>"
+                        + "<td class='text-center'>" + liga.pais.nombre + "</td>"
+                        + '<td class="text-center"> <button class="btn btn-danger" onclick="Eliminar(' + liga.idLiga + ')"><i class="fa-solid fa-ban fa-xl" style="color: #ffffff;"></i></button></td>'
+                        + "</tr>";
+
+                    $("#tablaEmpleado tbody").append(filas);
+                });
+            },
+            error: function (result) {
+                alert('Error en la consulta.' + result.responseJSON.ErrorMessage); //es un error de JSON, y es porque puede venir vacio o null
+            }
+        });
+    };
+
+    function GetAllPais() {
+        $.ajax({
+            url: 'http://192.168.0.123/api/Pais',
+            type: 'GET',
+            success: function (result) {
+                console.log(result)
+                $.each(result, function (i, pais) {
+                    var filas =
+                        '<option value="' + pais.idPais + '">' + pais.nombre + '</option>';
+                    $("#ddlpais").append(filas);
+                });
+            },
+            error: function (result) {
+                alert('Error .' + result.responseJSON.ErrorMessage);
+            }
+        });
+    }
+
+    function Eliminar(idLiga) {
+        if (confirm("Estas seguro de eliminar el equipo ")) {
+            $.ajax({
+                type: 'DELETE',
+                url: 'http://192.168.0.123/api/Liga/Delete/' + idLiga,
+                success: function (result) {
+                    $('#myModal').modal();
+                    GetAll();
+                },
+                error: function (result) {
+                    alert('Error en la consulta.' + result.responseJSON.ErrorMessage);
+                }
+            });
+        };
+    };
+    function GetById(idLiga) {
+        $.ajax({
+            type: 'GET',
+            url: 'http://192.168.0.123/api/Liga/GetById/' + idLiga,
+            success: function (result) {
+                limpiarModal();
+                $('#txtidLiga').val(result[0].idLiga);
+                $('#txtnombre').val(result[0].nombre);
+                $("#ddlpais option[value='" + result[0].pais.idPais + "']").attr("selected", true);
+                $('#txtlogo').val(result[0].logo);
+                $('#modal').modal('show');
+            },
+            error: function (result) {
+                alert('Error en la consulta.' + result.responseJSON.ErrorMessage);
+            }
+        });
+    }
+
+    function Update() {
+        var liga = {
+            idLiga: $('#txtidLiga').val(),
+            nombre: $('#txtnombre').val(),
+            logo: $('#txtlogo').val(),
+            pais: {
+                idPais: $('#ddlpais').val()
+            },
+        }
+        $.ajax({
+            type: 'PUT',
+            url: 'http://192.168.0.123/api/Liga/Update/' + liga.idLiga,
+            contentType: 'application/json', // Aquí se establece el Content-Type
+            data: JSON.stringify(liga),
+            success: function (result) {
+                alert("Liga se ha actualizado correctamente");
+                modalClose();
+                limpiarModal();
+                GetAll();
+            },
+            error: function (result) {
+                alert('Error en la consulta.' + result.responseJSON.ErrorMessage);
+            }
+        });
+    }
+
+    function Add() {
+        var liga = {
+            
+            nombre: $('#txtnombre').val(),
+            logo: $('#txtlogo').val(),
+            pais: {
+                idPais: $('#ddlpais').val()
+            }
+        }
+        $.ajax({
+            url: 'http://192.168.0.123/api/Liga',
+            type: 'POST',
+            contentType: 'application/json', // Aquí se establece el Content-Type
+            data: JSON.stringify(liga), // Asegúrate de convertir tu objeto a una cadena JSON
+            success: function (result) {
+                alert("Liga dado de alta correctamente");
+                modalClose();
+                limpiarModal();
+                GetAll();
+            },
+            error: function (result) {
+                console.log(result);
+                alert('Error en la consulta.' + result.responseJSON.ErrorMessage); //es un error de JSON, y es porque puede venir vacio o null
+            }
+        });
+    }
+
+</script>
+
+

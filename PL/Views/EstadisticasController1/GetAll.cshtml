@@ -1,0 +1,183 @@
+﻿
+@{
+    ViewData["Title"] = "GetAll";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@{
+    ViewData["Title"] = "GetAll";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2 class="text-center">Estadisticas Equipo</h2>
+
+<div class="text-center">
+    <button class="btn btn-success m-3" onclick="GetAll()">Agregar</button>
+</div>
+<div class="col-md-12">
+
+    <table id="tablaEmpleado" class="table table-hover" border="1">
+        <thead class="table-dark">
+            <tr>
+                <th class="text-center" scope="col"></th>
+                <th class="text-center" scope="col">Equipo</th>
+                <th class="text-center" scope="col">PJ</th>
+                <th class="text-center" scope="col">PG</th>
+                <th class="text-center" scope="col">PP</th>
+                <th class="text-center" scope="col">GA</th>
+                <th class="text-center" scope="col">P</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</div>
+
+
+<div class="modal fade" id="modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" onclick="modalClose()">×</button>
+                <h4 class="modal-title">Formulario Estadisticas</h4>
+            </div>
+
+            <div class="modal-body">
+                <form>
+                    <div class="form-group d-flex justify-content-center m-2">
+                        <input class="form-control" id="txtidEquipo" placeholder="Id Equipo" type="hidden" />
+                    </div>
+                    <div class="form-group d-flex justify-content-center m-2">
+                        <input type="text" class="form-control" id="txtPJ" placeholder="Partidos Jugados" />
+                    </div>
+                    <div class="form-group d-flex justify-content-center m-2">
+                        <input type="text" class="form-control" id="txtPG" placeholder="Partididos Ganados" />
+                    </div>
+                    <div class="form-group d-flex justify-content-center m-2">
+                        <input type="text" class="form-control" id="txtPP" placeholder="Partidos Perdidos" />
+                    </div><div class="form-group d-flex justify-content-center m-2">
+                        <input type="text" class="form-control" id="txtGA" placeholder="Goles Anotados" />
+                    </div>
+                    <div class="form-group d-flex justify-content-center m-2">
+                        <input type="text" class="form-control" id="txtP" placeholder="Puntos" />
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-success m-1" id="btnUpdate" onclick="guardar()">Guardar</button>
+                <button type="button" class="btn btn-danger m-1" data-dismiss="modal" onclick="modalClose()">Cancelar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="~/lib/jquery/dist/jquery.min.js"></script>
+<script type="text/javascript">
+    function showModal() {
+        $('#modal').modal("show");
+    }
+
+    function modalClose() {
+        $('#modal').modal("hide");
+    }
+
+    function guardar() {
+            Update();
+    }
+
+    function limpiarModal() {
+        $('#txtidEquipo').val('');
+        $('#txtPJ').val('');
+        $('#txtPG').val('');
+        $('#txtPP').val('');
+        $('#txtGA').val('');
+        $('#txtP').val('');
+    }
+
+
+    function GetAll(idEquipo) {
+        $.ajax({
+
+            url: 'http://192.168.0.123/api/Estadisticas/GetById/'+ idEquipo,
+            type: 'GET',
+            success: function (result) {
+                console.log(result)
+                $('#tablaEmpleado tbody').empty();
+                $.each(result, function (i, equipo) {
+
+                    var filas =
+                        '<tr>'
+                        + '<td class="text-center"> '
+                        + '<button class="btn btn-outline-warning" onclick="GetById(' + equipo.idEquipo + ')">'
+                        + '<i class="fa-solid fa-pen-to-square fa-xl"></i>'
+                        + '</button> '
+                        + '</td>'
+                        + "<td class='text-center'>" + equipo.equipo.idEquipo + "</td>"
+                        + "<td class='text-center'>" + equipo.partidosJugados + "</td>"
+                        + "<td class='text-center'>" + equipo.partidosGanados + "</td>"
+                        + "<td class='text-center'>" + equipo.partidosPerdidos + "</td>"
+                        + "<td class='text-center'>" + equipo.golesAnotados + "</td>"
+                        + "<td class='text-center'>" + puntos + "</td>"
+                        + "</tr>";
+
+                    $("#tablaEmpleado tbody").append(filas);
+                });
+            },
+            error: function (result) {
+                alert('Error en la consulta.' + result.responseJSON.ErrorMessage); //es un error de JSON, y es porque puede venir vacio o null
+            }
+        });
+    };
+
+   
+    function GetById(idJugador) {
+        $.ajax({
+            type: 'GET',
+            url: 'http://192.168.0.123/api/Estadisticas/GetById/' + idEquipo,
+            success: function (result) {
+                limpiarModal();
+                $('#txtidEquipo').val(result.idEquipo);
+                $('#txtPJ').val(result.partidosJugados);
+                $('#txtPG').val(result.partidosGanados);
+                $('#txtPP').val(result.partidosPerdidos);
+                $('#txtGA').val(result.golesAnotados);
+                $('#txtp').val(result.golesAnotados);
+                $('#modal').modal('show');
+            },
+            error: function (result) {
+                alert('Error en la consulta.' + result.responseJSON.ErrorMessage);
+            }
+        });
+    }
+
+    function Update() {
+        var estadistica = {
+            idEquipo: $('#txtidEquipo').val(),
+            partidosJugados: $('#txtPJ').val(),
+            partidosGanados: $('#txtPG').val(),
+            partidosPerdidos: $('#txtPP').val(),
+            golesAnotados: $('#txtGA').val(),
+            puntos: $('#txtP').val()
+        }
+        $.ajax({
+            type: 'PUT',
+            url: 'http://192.168.0.123/api/Estadisticas/Update/' + estadistica.idEquipo,
+            contentType: 'application/json', // Aquí se establece el Content-Type
+            data: JSON.stringify(estadistica),
+            success: function (result) {
+                alert("Jugador ha actualizado correctamente");
+                modalClose();
+                limpiarModal();
+                GetAll();
+            },
+            error: function (result) {
+                alert('Error en la consulta.' + result.responseJSON.ErrorMessage);
+            }
+        });
+    }
+
+
+</script>
+
+
+
+

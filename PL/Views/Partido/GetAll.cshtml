@@ -1,0 +1,242 @@
+﻿
+@{
+    ViewData["Title"] = "GetAll";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+
+<h2 class="text-center">Partidos</h2>
+
+<div class="text-center">
+    <button class="btn btn-success m-3" onclick="showModal()">Agregar</button>
+</div>
+<div class="col-md-12">
+
+    <table id="tablaEmpleado" class="table table-hover" border="1">
+        <thead class="table-dark">
+            <tr>
+                
+                <th class="text-center" scope="col">Eqipo Local</th>
+                <th class="text-center" scope="col">EquipoVisitante</th>
+                <th class="text-center" scope="col">Estadio</th>
+                <th class="text-center" scope="col">Fecha</th>
+                <th class="text-center" scope="col"></th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</div>
+
+
+<div class="modal fade" id="modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" onclick="modalClose()">×</button>
+                <h4 class="modal-title">Formulario Partido</h4>
+            </div>
+
+            <div class="modal-body">
+                <form>
+                    
+                    <div class="form-group d-flex justify-content-center m-2">
+                        <input type="date" class="form-control" id="txtfecha" placeholder="Fecha" />
+                    </div>
+                    <div class="form-group d-flex justify-content-center m-2">
+                        <select class="form-control" id="ddlEquipoLocal">
+                            <option value="0">Selecciona un Equipo</option>
+                        </select>
+                    </div>
+                    <div class="form-group d-flex justify-content-center m-2">
+                        <select class="form-control" id="ddlEquipoVisitnte">
+                            <option value="0">Selecciona un Equipo</option>
+                        </select>
+                    </div>
+                    <div class="form-group d-flex justify-content-center m-2">
+                        <select class="form-control" id="ddlEstadio">
+                            <option value="0">Selecciona un Estadio</option>
+                        </select>
+                    </div>
+                    
+                </form>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-success m-1" id="btnUpdate" onclick="guardar()">Guardar</button>
+                <button type="button" class="btn btn-danger m-1" data-dismiss="modal" onclick="modalClose()">Cancelar</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script src="~/lib/jquery/dist/jquery.min.js"></script>
+<script type="text/javascript">
+    $(document).ready(function () { //click
+        GetAll();
+        GetAllEquipoLocal();
+        GetAllEquipoVisitante();
+        GetAllEstadio();
+    });
+    function showModal() {
+        $('#modal').modal("show");
+    }
+
+    function modalClose() {
+        $('#modal').modal("hide");
+    }
+
+    function guardar(){
+        Add();
+    }
+    // function guardar() {
+    //     var idIngrediente = $('#txtidIngrediente').val()
+    //     if (idIngrediente == 0) {
+    //         Add();
+    //     } else {
+    //         Update();
+    //     }
+    // }
+
+    function limpiarModal() {
+        $('#ddlEquipoLocal option[value="0"]').attr("selected", true);
+        $('#ddlEquipoVisitnte option[value="0"]').attr("selected", true);
+        $('#ddlEstadio option[value="0"]').attr("selected", true);
+        $('#txtfecha').val('');
+    }
+
+    function GetAll() {
+        $.ajax({
+
+            url: 'http://192.168.0.123/api/partido/',
+            type: 'GET',
+            success: function (result) {
+                console.log(result)
+                $('#tablaEmpleado tbody').empty();
+                $.each(result, function (i, partido) {
+
+                    var filas =
+                        '<tr>'
+                        // + "<td class='text-center'><img src='" + partido.equipoLocal.nombre + "' alt='' width='50' height='50'> </td>"
+                        + "<td class='text-center'>" + partido.equipoLocal.nombre + "</td>"
+                        + "<td class='text-center'>" + partido.equipoVisitante.nombre + "</td>"
+                        + "<td class='text-center'>" + partido.estadio.idEstadio + "</ td>"
+                        + "<td class='text-center'>" + partido.fecha + "</td>"
+                        + '<td class="text-center"> <button class="btn btn-danger" onclick="Eliminar(' + partido.idPartido  + ')"><i class="fa-solid fa-ban fa-xl" style="color: #ffffff;"></i></button></td>'
+                        + "</tr>";
+
+                    $("#tablaEmpleado tbody").append(filas);
+                });
+            },
+            error: function (result) {
+                alert('Error en la consulta.' + result.responseJSON.ErrorMessage); //es un error de JSON, y es porque puede venir vacio o null
+            }
+        });
+    };
+    function GetAllEquipoLocal() {
+        $.ajax({
+            url: 'http://192.168.0.123/api/Equipo/GetAll',
+            type: 'GET',
+            success: function (result) {
+                console.log(result)
+                $.each(result, function (i, local) {
+                    var filas =
+                        '<option value="' + local.idEquipo + '">' + local.nombre + '</option>';
+                    $("#ddlEquipoLocal").append(filas);
+                });
+            },
+            error: function (result) {
+                alert('Error .' + result.responseJSON.ErrorMessage);
+            }
+        });
+    }
+
+    function GetAllEquipoVisitante() {
+        $.ajax({
+            url: 'http://192.168.0.123/api/Equipo/GetAll',
+            type: 'GET',
+            success: function (result) {
+                console.log(result)
+                $.each(result, function (i, visitante) {
+                    var filas =
+                        '<option value="' + visitante.idEquipo + '">' + visitante.nombre + '</option>';
+                    $("#ddlEquipoVisitnte").append(filas);
+                });
+            },
+            error: function (result) {
+                alert('Error .' + result.responseJSON.ErrorMessage);
+            }
+        });
+    }
+
+    function GetAllEstadio() {
+        $.ajax({
+            url: 'http://192.168.0.123/api/Estadio',
+            type: 'GET',
+            success: function (result) {
+                console.log(result)
+                $.each(result, function (i, estadio) {
+                    var filas =
+                        '<option value="' + estadio.idEstadio + '">' + estadio.nombre + '</option>';
+                    $("#ddlEstadio").append(filas);
+                });
+            },
+            error: function (result) {
+                alert('Error .' + result.responseJSON.ErrorMessage);
+            }
+        });
+    }
+    
+
+
+
+    function Eliminar(IdPartido) {
+        if (confirm("Estas seguro de eliminar el ingrediente ")) {
+            $.ajax({
+                type: 'DELETE',
+                url: 'http://192.168.0.123/api/partido/' + IdPartido,
+                success: function (result) {
+                    $('#myModal').modal();
+                    GetAll();
+                },
+                error: function (result) {
+                    alert('Error en la consulta.' + result.responseJSON.ErrorMessage);
+                }
+            });
+        };
+    };
+
+
+    function Add() {
+        var partido = {
+            equipoLocal: {
+                idEquipo: $('#ddlEquipoLocal').val(),
+            },
+            equipoVisitante: {
+                idEquipo: $('#ddlEquipoVisitnte').val(),
+            },
+            estadio: {
+                idEstadio: $('#ddlEstadio').val(),
+            },
+            fecha: $('#txtfecha').val()
+        }
+        console.log(partido);
+        $.ajax({
+            url: 'http://192.168.0.123/api/partido',
+            type: 'POST',
+            contentType: 'application/json', // Aquí se establece el Content-Type
+            data: JSON.stringify(partido), // Asegúrate de convertir tu objeto a una cadena JSON
+            success: function (result) {
+                alert("Partido dado de alta correctamente");
+                modalClose();
+                limpiarModal();
+                GetAll();
+            },
+            error: function (result) {
+                console.log(result);
+                alert('Error en la consulta.' + result.responseJSON.ErrorMessage); //es un error de JSON, y es porque puede venir vacio o null
+            }
+        });
+    }
+
+</script>
